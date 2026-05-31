@@ -253,6 +253,7 @@ textarea::placeholder{color:var(--text3);font-weight:300}
   <div class="hdr-top">
     <h1>What I Ate <span class="sync-dot" id="sync-dot" title="Sync status"></span></h1>
     <span class="date-lbl" id="date-lbl"></span>
+    <button onclick="resetSetup()" style="font-size:.7rem;color:var(--text3);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;margin-left:8px" title="Reset credentials">⚙ credentials</button>
   </div>
   <div class="cal-summary">
     <div class="ring-wrap" onclick="openModal()" title="Set goals">
@@ -776,6 +777,16 @@ document.getElementById('s-ant').addEventListener('keydown',e=>{ if(e.key==='Ent
 document.getElementById('s-user').addEventListener('keydown',e=>{ if(e.key==='Enter')saveSetup(); });
 document.querySelectorAll('.goal-field input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')saveGoals();}));
 
+
+function resetSetup() {
+  localStorage.removeItem('wia_gh_token');
+  localStorage.removeItem('wia_gh_user');
+  localStorage.removeItem('wia_ant_key');
+  localStorage.removeItem('wia_gist_id');
+  const existingUser = localStorage.getItem('wia_gh_user');
+    if (existingUser) document.getElementById('s-user').value = existingUser;
+    document.getElementById('setup-modal').classList.add('open');
+}
 
 function checkSetup() {
   const token = localStorage.getItem('wia_gh_token');
