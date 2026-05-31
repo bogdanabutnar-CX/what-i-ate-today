@@ -513,7 +513,7 @@ async function logFood() {
     const parseRes = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST', headers:{'Content-Type':'application/json','x-api-key':localStorage.getItem('wia_ant_key')||'','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body: JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:400,
+        model:'claude-sonnet-4-5', max_tokens:400,
         system:'UK food intake parser. Respond ONLY with valid JSON, no markdown. Format: {"display_name":"concise name","search_query":"search terms","estimated_grams":100,"use_per_100g":true,"fallback_kcal":200,"fallback_protein_g":10,"fallback_carbs_g":20,"fallback_fat_g":8}. use_per_100g=true for branded/supermarket products, false for composite meals. UK portions, metric weights.',
         messages:[{role:'user',content:text}]
       })
@@ -756,7 +756,7 @@ async function sendChat() {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST', headers:{'Content-Type':'application/json','x-api-key':localStorage.getItem('wia_ant_key')||'','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:300,
+        model:'claude-sonnet-4-5', max_tokens:300,
         system:'You are a concise friendly nutrition assistant. Answer questions about calories and macros using the data provided. Be brief and direct. Use UK English.',
         messages:[{role:'user',content:'Context:\n'+context+'\n\nQuestion: '+text}]
       })
