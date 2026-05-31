@@ -1,0 +1,16 @@
+{
+  "name": "What I Ate",
+  "short_name": "What I Ate",
+  "description": "Quick calorie and macro tracker",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f7f5f0",
+  "theme_color": "#1a1a18",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='32' fill='%232d5a3d'/><text x='96' y='130' font-size='110' text-anchor='middle' font-family='serif'>🥗</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

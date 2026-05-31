@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a1a18">
+<title>What I Ate</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f5f0;--surface:#fff;--surface2:#f0ede6;--border:#e2ddd4;--border2:#ccc7bc;
+  --text:#1a1a18;--text2:#6b6860;--text3:#a09d97;
+  --accent:#2d5a3d;--accent-light:#e8f0eb;--accent-text:#1d3d29;
+  --over:#b83000;--over-light:#fff0ea;
+  --danger:#c0392b;--danger-light:#fdf0ef;
+  --exact-bg:#e6f4ec;--exact-text:#1d6b3a;
+  --est-bg:#fef9ec;--est-text:#7a5c1e;
+  --tip-bg:#fffbf0;--tip-border:#f0d890;--tip-text:#7a5c1e;
+  --track:#e2ddd4;--fill:#2d5a3d;--fill-over:#b83000;
+  --protein:#3b6ea5;--protein-bg:#eaf1fb;
+  --carbs:#7a5c1e;--carbs-bg:#fef9ec;
+  --fat:#6b3fa0;--fat-bg:#f3eefb;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#141412;--surface:#1e1e1b;--surface2:#252520;--border:#2e2e28;--border2:#3e3e36;
+  --text:#f0ede6;--text2:#9e9b94;--text3:#6b6860;
+  --accent:#4a8c60;--accent-light:#1a2e22;--accent-text:#8fcca8;
+  --over:#e8622a;--over-light:#2a1808;
+  --danger:#e05c4c;--danger-light:#2a1210;
+  --exact-bg:#0f2a1a;--exact-text:#6fcf97;
+  --est-bg:#2a1e08;--est-text:#f0c060;
+  --tip-bg:#201c0e;--tip-border:#4a3c14;--tip-text:#d4aa50;
+  --track:#2e2e28;--fill:#4a8c60;--fill-over:#e8622a;
+  --protein:#6aa0d4;--protein-bg:#0f1e2e;
+  --carbs:#d4aa50;--carbs-bg:#2a1e08;
+  --fat:#b08ad4;--fat-bg:#1e1030;
+}}
+html{font-size:16px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:5rem}
+
+/* HEADER */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:1.1rem 1.25rem 1.25rem;position:sticky;top:0;z-index:10}
+.hdr-top{max-width:600px;margin:0 auto;display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1rem}
+h1{font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:400;letter-spacing:-.02em}
+.date-lbl{font-size:.75rem;color:var(--text3);font-weight:300}
+.cal-summary{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:1.25rem}
+.ring-wrap{flex-shrink:0;position:relative;width:76px;height:76px;cursor:pointer}
+.ring-wrap:hover .ring-hint{opacity:1}
+.ring-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,0,0,.2);opacity:0;transition:opacity .15s;font-size:.58rem;color:#fff;font-weight:500;text-align:center;line-height:1.3}
+.ring-svg{width:76px;height:76px;transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:var(--track);stroke-width:6}
+.ring-fill{fill:none;stroke:var(--fill);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .5s ease,stroke .3s}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.ring-pct{font-family:'DM Serif Display',serif;font-size:1.1rem;line-height:1}
+.ring-sub{font-size:.58rem;color:var(--text3);margin-top:1px}
+.cal-nums{flex:1;display:flex;flex-direction:column;gap:5px}
+.cal-row{display:flex;justify-content:space-between;align-items:baseline}
+.cal-lbl{font-size:.75rem;color:var(--text2)}
+.cal-val{font-family:'DM Serif Display',serif;font-size:1rem;color:var(--text)}
+.cal-val.rem{color:var(--accent)}
+.cal-val.over{color:var(--over)}
+.cal-val small{font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:300;color:var(--text3);margin-left:2px}
+.prog-wrap{max-width:600px;margin:.8rem auto 0}
+.prog-bg{height:4px;background:var(--track);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;background:var(--fill);border-radius:99px;transition:width .5s ease,background .3s;max-width:100%}
+
+/* MACRO GOALS BAR */
+.macro-goals{max-width:600px;margin:.75rem auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mg{background:var(--surface2);border-radius:8px;padding:7px 10px}
+.mg-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.mg-name{font-size:.65rem;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.mg-name.p{color:var(--protein)}.mg-name.c{color:var(--carbs)}.mg-name.f{color:var(--fat)}
+.mg-val{font-size:.72rem;color:var(--text2)}
+.mg-bar{height:3px;border-radius:99px;background:var(--track);overflow:hidden}
+.mg-bar-fill{height:100%;border-radius:99px;transition:width .4s ease}
+.mg-bar-fill.p{background:var(--protein)}.mg-bar-fill.c{background:var(--carbs)}.mg-bar-fill.f{background:var(--fat)}
+
+/* TABS */
+.tabs{max-width:600px;margin:1.25rem auto 0;padding:0 1.25rem;display:flex;gap:0;border-bottom:1px solid var(--border)}
+.tab{padding:.6rem 1rem;font-size:.82rem;font-weight:400;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;white-space:nowrap}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500}
+
+/* MAIN */
+main{max-width:600px;margin:0 auto;padding:1.25rem}
+
+/* INPUT */
+.input-area{margin-bottom:1.25rem}
+.input-wrap{display:flex;gap:8px}
+textarea{flex:1;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:300;padding:11px 13px;border:1px solid var(--border2);border-radius:10px;background:var(--surface);color:var(--text);resize:none;min-height:50px;max-height:110px;line-height:1.5;outline:none;transition:border-color .15s}
+textarea:focus{border-color:var(--accent)}
+textarea::placeholder{color:var(--text3);font-weight:300}
+.log-btn{align-self:flex-end;height:50px;padding:0 18px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;transition:opacity .15s,transform .1s}
+.log-btn:hover{opacity:.88}.log-btn:active{transform:scale(.97)}.log-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.err{margin-top:7px;font-size:.8rem;color:var(--danger);background:var(--danger-light);padding:7px 11px;border-radius:8px;display:none}
+.err.show{display:block}
+
+/* TIP */
+.tip{margin-bottom:1.1rem;padding:9px 13px;background:var(--tip-bg);border:1px solid var(--tip-border);border-radius:10px;font-size:.8rem;color:var(--tip-text);line-height:1.5;display:none;gap:7px;align-items:flex-start}
+.tip.show{display:flex}
+
+/* MACROS SUMMARY */
+.macros-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.25rem}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px}
+.mc-lbl{font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;font-weight:500}
+.mc-val{font-family:'DM Serif Display',serif;font-size:1.25rem;line-height:1;color:var(--text)}
+.mc-unit{font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:300;color:var(--text3);margin-left:2px}
+
+/* LOG LIST */
+.sec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.sec-lbl{font-size:.72rem;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
+.clr-btn{font-size:.72rem;color:var(--text3);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:6px;font-family:'DM Sans',sans-serif;transition:color .15s,background .15s}
+.clr-btn:hover{color:var(--danger);background:var(--danger-light)}
+.log-list{list-style:none}
+.log-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:5px;animation:fadeUp .22s ease}
+.it-top{display:flex;align-items:flex-start;gap:9px}
+.it-name{flex:1;font-size:.88rem;line-height:1.4}
+.it-kcal{font-family:'DM Serif Display',serif;font-size:1rem;white-space:nowrap}
+.it-bot{display:flex;align-items:center;justify-content:space-between;margin-top:5px}
+.it-macros{font-size:.75rem;color:var(--text2)}
+.it-meta{display:flex;align-items:center;gap:7px}
+.badge{font-size:.67rem;font-weight:500;padding:2px 7px;border-radius:20px}
+.badge.exact{background:var(--exact-bg);color:var(--exact-text)}
+.badge.estimated{background:var(--est-bg);color:var(--est-text)}
+.del{background:none;border:none;cursor:pointer;color:var(--text3);padding:2px 3px;border-radius:4px;font-size:.95rem;line-height:1;transition:color .15s}
+.del:hover{color:var(--danger)}
+
+/* WEEK VIEWS */
+.week-day{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 15px;margin-bottom:7px}
+.wd-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.wd-name{font-size:.88rem;font-weight:500}
+.wd-kcal{font-family:'DM Serif Display',serif;font-size:1rem}
+.wd-bar-bg{height:4px;background:var(--track);border-radius:99px;overflow:hidden;margin-bottom:6px}
+.wd-bar-fill{height:100%;border-radius:99px;transition:width .4s}
+.wd-macros{font-size:.75rem;color:var(--text2)}
+.wd-empty{font-size:.8rem;color:var(--text3);font-style:italic}
+.week-summary{background:var(--accent-light);border-radius:10px;padding:11px 15px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.ws-lbl{font-size:.75rem;color:var(--accent-text)}
+.ws-val{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--accent-text)}
+
+/* HISTORY */
+.hist-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 15px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.hr-week{font-size:.85rem;font-weight:500}
+.hr-kcal{font-family:'DM Serif Display',serif;font-size:1.05rem}
+.hr-days{font-size:.75rem;color:var(--text3)}
+
+/* CHAT */
+.chat-area{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface)}
+.chat-msgs{padding:14px;min-height:120px;max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:9px 13px;border-radius:10px;font-size:.86rem;line-height:1.5}
+.msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:3px}
+.msg.assistant{align-self:flex-start;background:var(--surface2);color:var(--text);border-bottom-left-radius:3px}
+.chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);background:var(--surface)}
+.chat-input{flex:1;font-family:'DM Sans',sans-serif;font-size:.88rem;padding:9px 12px;border:1px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text);outline:none;transition:border-color .15s}
+.chat-input:focus{border-color:var(--accent)}
+.chat-input::placeholder{color:var(--text3)}
+.chat-send{padding:0 14px;height:38px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;cursor:pointer;transition:opacity .15s}
+.chat-send:hover{opacity:.88}.chat-send:disabled{opacity:.4;cursor:not-allowed}
+
+/* MODAL */
+.modal-bd{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:100;align-items:center;justify-content:center;padding:1rem}
+.modal-bd.open{display:flex}
+.modal{background:var(--surface);border-radius:16px;padding:1.6rem;width:100%;max-width:360px;animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.modal h2{font-family:'DM Serif Display',serif;font-size:1.2rem;font-weight:400;margin-bottom:.3rem}
+.modal p{font-size:.8rem;color:var(--text2);margin-bottom:1.1rem;line-height:1.5}
+.goal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem}
+.goal-field label{font-size:.75rem;font-weight:500;color:var(--text2);display:block;margin-bottom:5px}
+.goal-field input{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:500;background:var(--surface);color:var(--text);outline:none}
+.goal-field input:focus{border-color:var(--accent)}
+.goal-field.full{grid-column:1/-1}
+.modal-btns{display:flex;gap:8px}
+.btn-cancel{flex:1;padding:10px;border:1px solid var(--border2);border-radius:9px;background:none;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:.88rem;cursor:pointer}
+.btn-cancel:hover{background:var(--surface2)}
+.btn-save{flex:1;padding:10px;border:none;border-radius:9px;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer}
+.btn-save:hover{opacity:.88}
+
+/* MISC */
+.empty-state{text-align:center;padding:2.5rem 1rem;color:var(--text3);font-size:.88rem;font-weight:300}
+.empty-state p:first-child{font-family:'DM Serif Display',serif;font-size:1.05rem;color:var(--text2);margin-bottom:5px}
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:inline-block}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);display:inline-block;margin-left:6px;transition:background .3s}
+.sync-dot.syncing{background:#f0a830;animation:pulse .8s ease infinite}
+.sync-dot.ok{background:var(--accent)}
+.sync-dot.err{background:var(--danger)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+
+<!-- SETUP MODAL -->
+<div class="modal-bd" id="setup-modal">
+  <div class="modal">
+    <h2>Welcome to What I Ate</h2>
+    <p>To sync your data across devices, this app uses a private GitHub Gist. You need a GitHub account and a personal access token with <strong>gist</strong> scope only.</p>
+    <p style="margin-top:-.5rem">Your token is stored only on this device and never in the app code.</p>
+    <div class="goal-grid" style="margin-bottom:1.1rem">
+      <div class="goal-field full">
+        <label>GitHub username</label>
+        <input type="text" id="s-user" placeholder="e.g. yourname" autocomplete="off" autocorrect="off" autocapitalize="off">
+      </div>
+      <div class="goal-field full">
+        <label>Personal access token (gist scope only)</label>
+        <input type="password" id="s-token" placeholder="ghp_…" autocomplete="off" autocorrect="off" autocapitalize="off">
+      </div>
+    </div>
+    <div id="setup-err" style="font-size:.78rem;color:var(--danger);margin-bottom:.8rem;display:none"></div>
+    <button class="btn-save" style="width:100%" onclick="saveSetup()" id="setup-save-btn">Connect & continue</button>
+    <p style="margin-top:.75rem;font-size:.75rem;color:var(--text3);line-height:1.5">Need a token? Go to github.com → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token. Tick only <em>gist</em>.</p>
+  </div>
+</div>
+
+<!-- GOALS MODAL -->
+<div class="modal-bd" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h2>Daily goals</h2>
+    <p>Set your calorie target and macro goals. Leave macros at 0 to skip tracking them.</p>
+    <div class="goal-grid">
+      <div class="goal-field full">
+        <label>Calories (kcal)</label>
+        <input type="number" id="g-kcal" min="500" max="6000" step="50" placeholder="e.g. 1800">
+      </div>
+      <div class="goal-field">
+        <label>Protein (g)</label>
+        <input type="number" id="g-p" min="0" max="500" step="5" placeholder="e.g. 120">
+      </div>
+      <div class="goal-field">
+        <label>Carbs (g)</label>
+        <input type="number" id="g-c" min="0" max="800" step="5" placeholder="e.g. 200">
+      </div>
+      <div class="goal-field full">
+        <label>Fat (g)</label>
+        <input type="number" id="g-f" min="0" max="300" step="5" placeholder="e.g. 65">
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveGoals()">Save</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="hdr-top">
+    <h1>What I Ate <span class="sync-dot" id="sync-dot" title="Sync status"></span></h1>
+    <span class="date-lbl" id="date-lbl"></span>
+  </div>
+  <div class="cal-summary">
+    <div class="ring-wrap" onclick="openModal()" title="Set goals">
+      <svg class="ring-svg" viewBox="0 0 76 76">
+        <circle class="ring-track" cx="38" cy="38" r="31"/>
+        <circle class="ring-fill" id="ring-fill" cx="38" cy="38" r="31" stroke-dasharray="194.8" stroke-dashoffset="194.8"/>
+      </svg>
+      <div class="ring-center">
+        <span class="ring-pct" id="ring-pct">0%</span>
+        <span class="ring-sub">of goal</span>
+      </div>
+      <div class="ring-hint">set<br>goals</div>
+    </div>
+    <div class="cal-nums">
+      <div class="cal-row">
+        <span class="cal-lbl">Consumed</span>
+        <span class="cal-val" id="c-consumed">0 <small>kcal</small></span>
+      </div>
+      <div class="cal-row">
+        <span class="cal-lbl">Target</span>
+        <span class="cal-val" id="c-target" style="cursor:pointer" onclick="openModal()">— <small>kcal</small></span>
+      </div>
+      <div class="cal-row">
+        <span class="cal-lbl" id="c-rem-lbl">Remaining</span>
+        <span class="cal-val rem" id="c-remaining">—</span>
+      </div>
+    </div>
+  </div>
+  <div class="prog-wrap">
+    <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+  <div class="macro-goals" id="macro-goals"></div>
+</header>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" data-tab="today">Today</div>
+  <div class="tab" data-tab="thisweek">This week</div>
+  <div class="tab" data-tab="lastweek">Last week</div>
+  <div class="tab" data-tab="history">History</div>
+  <div class="tab" data-tab="chat">Ask</div>
+</div>
+
+<main>
+  <!-- TODAY -->
+  <div id="tab-today">
+    <div class="input-area">
+      <div class="input-wrap">
+        <textarea id="food-input" placeholder="e.g. half a can of Sainsbury's tuna in water, two heaped spoons of cottage cheese…" rows="2"></textarea>
+        <button class="log-btn" id="log-btn" onclick="logFood()"><span id="btn-lbl">Log</span></button>
+      </div>
+      <div class="err" id="err-msg"></div>
+    </div>
+    <div class="tip" id="tip-bar">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="tip-txt"></span>
+    </div>
+    <div class="macros-row">
+      <div class="mc"><div class="mc-lbl">Protein</div><div class="mc-val" id="tot-p">0<span class="mc-unit">g</span></div></div>
+      <div class="mc"><div class="mc-lbl">Carbs</div><div class="mc-val" id="tot-c">0<span class="mc-unit">g</span></div></div>
+      <div class="mc"><div class="mc-lbl">Fat</div><div class="mc-val" id="tot-f">0<span class="mc-unit">g</span></div></div>
+    </div>
+    <div class="sec-head" id="sec-head" style="display:none">
+      <span class="sec-lbl">Today's log</span>
+      <button class="clr-btn" onclick="clearToday()">Clear all</button>
+    </div>
+    <ul class="log-list" id="log-list"></ul>
+    <div class="empty-state" id="empty-state"><p>Nothing logged yet</p><p>Type what you just ate and hit Log</p></div>
+  </div>
+
+  <!-- THIS WEEK -->
+  <div id="tab-thisweek" style="display:none"></div>
+
+  <!-- LAST WEEK -->
+  <div id="tab-lastweek" style="display:none"></div>
+
+  <!-- HISTORY -->
+  <div id="tab-history" style="display:none"></div>
+
+  <!-- CHAT -->
+  <div id="tab-chat" style="display:none">
+    <div class="chat-area">
+      <div class="chat-msgs" id="chat-msgs">
+        <div class="msg assistant">Ask me anything about your eating — "how many calories left today?", "how was my week?", "what's my protein looking like?"</div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chat-input" type="text" placeholder="Ask about your calories or macros…">
+        <button class="chat-send" id="chat-send" onclick="sendChat()">Ask</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ── CONFIG ──
+const GITHUB_TOKEN = localStorage.getItem('wia_gh_token') || '';
+const GITHUB_USER = localStorage.getItem('wia_gh_user') || '';
+const GIST_FILENAME = 'what-i-ate-data.json';
+const CIRC = 2 * Math.PI * 31; // 194.8
+
+const TIPS = [
+  "A level teaspoon holds about 5g; a heaped teaspoon is closer to 8–10g.",
+  "A level tablespoon is roughly 15g; heaped is around 20–25g for soft foods like cottage cheese.",
+  "A standard mug holds about 250ml — useful for soups, milk, or porridge.",
+  "A small handful of nuts is roughly 20–25g; a large handful closer to 35–40g.",
+  "A medium banana weighs about 120g peeled. Small ones are around 80g.",
+  "A slice of standard sliced bread is about 35–40g. Thick-cut is closer to 50g.",
+  "A portion of cooked pasta or rice is typically 150–180g — a small bowlful.",
+  "A rasher of back bacon is roughly 30–35g cooked. Streaky rashers about 20g.",
+  "A large egg is roughly 50g edible weight.",
+  "A knob of butter is about 7–10g; a generous spread on toast closer to 15g.",
+  "An average chicken breast is 150–180g raw. A small one around 120g.",
+  "A tin of tuna (145g drained) yields about 100–110g of fish.",
+  "A dollop of Greek yoghurt is roughly 60–80g — about 3 heaped tablespoons.",
+  "One tablespoon of olive oil is about 14g.",
+  "A medium potato before cooking is around 150–175g.",
+  "A generous pour of milk on cereal is usually 150–200ml.",
+];
+
+// ── STATE ──
+let gistId = localStorage.getItem('wia_gist_id') || null;
+let db = { days: {}, goals: { kcal: 0, protein: 0, carbs: 0, fat: 0 } };
+let tipIdx = Math.floor(Math.random() * TIPS.length);
+let syncing = false;
+
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function dateStr(d) { return d.toISOString().slice(0,10); }
+
+function weekDates(offsetWeeks=0) {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - ((day+6)%7) - offsetWeeks*7);
+  mon.setHours(0,0,0,0);
+  return Array.from({length:7}, (_,i) => { const d=new Date(mon); d.setDate(mon.getDate()+i); return dateStr(d); });
+}
+
+function getDay(dateKey) {
+  if (!db.days[dateKey]) db.days[dateKey] = { entries: [] };
+  return db.days[dateKey];
+}
+
+// ── GIST SYNC ──
+function setSyncDot(state) {
+  const d = document.getElementById('sync-dot');
+  d.className = 'sync-dot ' + state;
+}
+
+async function loadFromGist() {
+  const GITHUB_TOKEN = localStorage.getItem('wia_gh_token')||'';
+  const GITHUB_USER  = localStorage.getItem('wia_gh_user')||'';
+  setSyncDot('syncing');
+  try {
+    // search for existing gist
+    if (!gistId) {
+      const r = await fetch('https://api.github.com/gists', {
+        headers: { Authorization: 'token ' + GITHUB_TOKEN, Accept: 'application/vnd.github.v3+json' }
+      });
+      const gists = await r.json();
+      const found = Array.isArray(gists) && gists.find(g => g.files && g.files[GIST_FILENAME]);
+      if (found) { gistId = found.id; localStorage.setItem('wia_gist_id', gistId); }
+    }
+    if (gistId) {
+      const r = await fetch('https://api.github.com/gists/' + gistId, {
+        headers: { Authorization: 'token ' + GITHUB_TOKEN }
+      });
+      const data = await r.json();
+      const content = data.files?.[GIST_FILENAME]?.content;
+      if (content) db = JSON.parse(content);
+    }
+    setSyncDot('ok');
+  } catch(e) { setSyncDot('err'); }
+  render();
+}
+
+async function saveToGist() {
+  const GITHUB_TOKEN = localStorage.getItem('wia_gh_token')||'';
+  if (!GITHUB_TOKEN) return;
+  setSyncDot('syncing');
+  try {
+    const body = { files: { [GIST_FILENAME]: { content: JSON.stringify(db) } } };
+    if (gistId) {
+      await fetch('https://api.github.com/gists/' + gistId, {
+        method: 'PATCH', headers: { Authorization: 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    } else {
+      const r = await fetch('https://api.github.com/gists', {
+        method: 'POST', headers: { Authorization: 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...body, description: 'What I Ate — food tracker data', public: false })
+      });
+      const data = await r.json();
+      gistId = data.id;
+      if (gistId) localStorage.setItem('wia_gist_id', gistId);
+    }
+    setSyncDot('ok');
+  } catch(e) { setSyncDot('err'); }
+}
+
+// ── GOALS MODAL ──
+function openModal() {
+  document.getElementById('g-kcal').value = db.goals.kcal || '';
+  document.getElementById('g-p').value = db.goals.protein || '';
+  document.getElementById('g-c').value = db.goals.carbs || '';
+  document.getElementById('g-f').value = db.goals.fat || '';
+  document.getElementById('modal').classList.add('open');
+  setTimeout(() => document.getElementById('g-kcal').focus(), 100);
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function saveGoals() {
+  db.goals = {
+    kcal: parseInt(document.getElementById('g-kcal').value)||0,
+    protein: parseInt(document.getElementById('g-p').value)||0,
+    carbs: parseInt(document.getElementById('g-c').value)||0,
+    fat: parseInt(document.getElementById('g-f').value)||0,
+  };
+  closeModal(); render(); saveToGist();
+}
+
+// ── TIPS ──
+function showTip() {
+  const bar = document.getElementById('tip-bar');
+  document.getElementById('tip-txt').textContent = TIPS[tipIdx % TIPS.length];
+  tipIdx++;
+  bar.classList.add('show');
+  clearTimeout(bar._t);
+  bar._t = setTimeout(() => bar.classList.remove('show'), 13000);
+}
+
+// ── OPEN FOOD FACTS ──
+async function searchOFF(query) {
+  try {
+    const r = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=5&fields=product_name,brands,nutriments`);
+    const data = await r.json();
+    if (!data.products?.length) return null;
+    for (const p of data.products) {
+      const n = p.nutriments;
+      if (n?.['energy-kcal_100g'] > 0) return {
+        brand: p.brands || '',
+        per100: { kcal: n['energy-kcal_100g']||0, protein: n['proteins_100g']||0, carbs: n['carbohydrates_100g']||0, fat: n['fat_100g']||0 }
+      };
+    }
+    return null;
+  } catch(e) { return null; }
+}
+
+// ── LOG FOOD ──
+async function logFood() {
+  const input = document.getElementById('food-input');
+  const btn = document.getElementById('log-btn');
+  const errEl = document.getElementById('err-msg');
+  const text = input.value.trim();
+  if (!text) return;
+  errEl.classList.remove('show');
+  btn.disabled = true;
+  document.getElementById('btn-lbl').innerHTML = '<span class="spinner"></span>';
+  try {
+    const parseRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:400,
+        system:`UK food intake parser. Respond ONLY with valid JSON, no markdown:
+{"display_name":"<concise log name>","search_query":"<Open Food Facts query>","estimated_grams":<number>,"use_per_100g":<bool>,"fallback_kcal":<number>,"fallback_protein_g":<number>,"fallback_carbs_g":<number>,"fallback_fat_g":<number>}
+use_per_100g=true for branded/supermarket products. UK portions, metric weights.`,
+        messages:[{role:'user',content:text}]
+      })
+    });
+    const pd = await parseRes.json();
+    const raw = pd.content?.find(b=>b.type==='text')?.text||'';
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    let entry = null;
+    if (parsed.use_per_100g && parsed.search_query) {
+      const off = await searchOFF(parsed.search_query);
+      if (off) {
+        const m = parsed.estimated_grams / 100;
+        entry = { id:Date.now(), name:parsed.display_name,
+          kcal:Math.round(off.per100.kcal*m), protein_g:Math.round(off.per100.protein*m*10)/10,
+          carbs_g:Math.round(off.per100.carbs*m*10)/10, fat_g:Math.round(off.per100.fat*m*10)/10,
+          source:'exact' };
+      }
+    }
+    if (!entry) entry = { id:Date.now(), name:parsed.display_name,
+      kcal:Math.round(parsed.fallback_kcal), protein_g:Math.round(parsed.fallback_protein_g*10)/10,
+      carbs_g:Math.round(parsed.fallback_carbs_g*10)/10, fat_g:Math.round(parsed.fallback_fat_g*10)/10,
+      source:'estimated' };
+    getDay(todayStr()).entries.unshift(entry);
+    await saveToGist();
+    input.value=''; render(); showTip();
+  } catch(e) {
+    errEl.textContent='Something went wrong — try again or rephrase.'; errEl.classList.add('show');
+  }
+  btn.disabled=false; document.getElementById('btn-lbl').textContent='Log';
+}
+
+function deleteEntry(dateKey, id) {
+  const day = getDay(dateKey);
+  day.entries = day.entries.filter(e=>e.id!==id);
+  saveToGist(); render();
+}
+
+function clearToday() {
+  if (!confirm("Clear today's log?")) return;
+  db.days[todayStr()] = { entries:[] };
+  saveToGist(); render();
+}
+
+// ── DAY TOTALS ──
+function dayTotals(dateKey) {
+  return (getDay(dateKey).entries||[]).reduce((a,e)=>{
+    a.kcal+=e.kcal; a.p+=e.protein_g; a.c+=e.carbs_g; a.f+=e.fat_g; return a;
+  },{kcal:0,p:0,c:0,f:0});
+}
+
+// ── RENDER HEADER ──
+function renderHeader() {
+  const t = dayTotals(todayStr());
+  const g = db.goals;
+  const consumed = Math.round(t.kcal);
+  const target = g.kcal||0;
+  const hasTarget = target > 0;
+  const pct = hasTarget ? Math.min(consumed/target,1) : 0;
+  const isOver = hasTarget && consumed > target;
+
+  const offset = CIRC - pct * CIRC;
+  const ring = document.getElementById('ring-fill');
+  ring.style.strokeDashoffset = offset;
+  ring.style.stroke = isOver ? 'var(--fill-over)' : 'var(--fill)';
+  document.getElementById('ring-pct').textContent = hasTarget ? Math.round(pct*100)+'%' : '–';
+  document.getElementById('c-consumed').innerHTML = consumed+' <small>kcal</small>';
+  document.getElementById('c-target').innerHTML = hasTarget ? target+' <small>kcal</small>' : '— <small style="font-family:\'DM Sans\',sans-serif;font-size:.68rem;color:var(--text3)">tap to set</small>';
+  const remEl = document.getElementById('c-remaining');
+  const remLbl = document.getElementById('c-rem-lbl');
+  if (!hasTarget) { remEl.textContent='—'; remEl.className='cal-val rem'; remLbl.textContent='Remaining'; }
+  else if (isOver) { remEl.innerHTML='+'+(consumed-target)+' <small>kcal</small>'; remEl.className='cal-val over'; remLbl.textContent='Over by'; }
+  else { remEl.innerHTML=(target-consumed)+' <small>kcal</small>'; remEl.className='cal-val rem'; remLbl.textContent='Remaining'; }
+
+  const bar = document.getElementById('prog-fill');
+  bar.style.width = Math.min(pct*100,100)+'%';
+  bar.style.background = isOver ? 'var(--fill-over)' : 'var(--fill)';
+
+  // macro goal bars
+  const mg = document.getElementById('macro-goals');
+  if (g.protein||g.carbs||g.fat) {
+    mg.style.display='grid';
+    const macros = [
+      {key:'p',name:'Protein',val:Math.round(t.p),goal:g.protein,cls:'p'},
+      {key:'c',name:'Carbs',val:Math.round(t.c),goal:g.carbs,cls:'c'},
+      {key:'f',name:'Fat',val:Math.round(t.f),goal:g.fat,cls:'f'},
+    ];
+    mg.innerHTML = macros.map(m => {
+      const hasg = m.goal>0;
+      const pp = hasg ? Math.min(m.val/m.goal,1)*100 : 0;
+      return `<div class="mg">
+        <div class="mg-top">
+          <span class="mg-name ${m.cls}">${m.name}</span>
+          <span class="mg-val">${m.val}${hasg?'/'+m.goal:''}<span style="font-size:.62rem;margin-left:1px">g</span></span>
+        </div>
+        <div class="mg-bar"><div class="mg-bar-fill ${m.cls}" style="width:${pp}%"></div></div>
+      </div>`;
+    }).join('');
+  } else { mg.style.display='none'; mg.innerHTML=''; }
+}
+
+// ── RENDER TODAY ──
+function renderToday() {
+  const today = todayStr();
+  const entries = getDay(today).entries||[];
+  const t = dayTotals(today);
+  document.getElementById('tot-p').innerHTML = Math.round(t.p)+'<span class="mc-unit">g</span>';
+  document.getElementById('tot-c').innerHTML = Math.round(t.c)+'<span class="mc-unit">g</span>';
+  document.getElementById('tot-f').innerHTML = Math.round(t.f)+'<span class="mc-unit">g</span>';
+  const list = document.getElementById('log-list');
+  const empty = document.getElementById('empty-state');
+  const head = document.getElementById('sec-head');
+  if (!entries.length) { list.innerHTML=''; empty.style.display='block'; head.style.display='none'; return; }
+  empty.style.display='none'; head.style.display='flex';
+  list.innerHTML = entries.map(e=>`
+    <li class="log-item">
+      <div class="it-top"><span class="it-name">${e.name}</span><span class="it-kcal">${Math.round(e.kcal)} kcal</span></div>
+      <div class="it-bot">
+        <span class="it-macros">P ${e.protein_g}g · C ${e.carbs_g}g · F ${e.fat_g}g</span>
+        <span class="it-meta">
+          <span class="badge ${e.source}">${e.source==='exact'?'label data':'estimated'}</span>
+          <button class="del" onclick="deleteEntry('${today}',${e.id})" aria-label="Remove">✕</button>
+        </span>
+      </div>
+    </li>`).join('');
+}
+
+// ── RENDER WEEK ──
+function renderWeek(containerId, offsetWeeks=0) {
+  const cont = document.getElementById(containerId);
+  const dates = weekDates(offsetWeeks);
+  const g = db.goals;
+  const weekTotal = dates.reduce((s,d)=>s+dayTotals(d).kcal,0);
+  const weekTarget = g.kcal ? g.kcal*7 : 0;
+  const fmt = d => new Date(d+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+  const isToday = d => d===todayStr();
+
+  let html = `<div class="week-summary">
+    <span class="ws-lbl">Week total</span>
+    <span class="ws-val">${Math.round(weekTotal)} kcal${weekTarget?' / '+weekTarget+' kcal':''}</span>
+  </div>`;
+
+  for (const d of dates) {
+    const t = dayTotals(d);
+    const hasEntries = (getDay(d).entries||[]).length > 0;
+    const pct = g.kcal ? Math.min(t.kcal/g.kcal,1)*100 : 0;
+    const isOver = g.kcal && t.kcal > g.kcal;
+    const future = new Date(d+'T12:00:00') > new Date();
+    html += `<div class="week-day">
+      <div class="wd-top">
+        <span class="wd-name">${fmt(d)}${isToday(d)?' <span style="font-size:.7rem;color:var(--accent);font-weight:500">today</span>':''}</span>
+        <span class="wd-kcal" style="color:${isOver?'var(--over)':'var(--text)'}">${hasEntries?Math.round(t.kcal)+' kcal':'—'}</span>
+      </div>
+      ${g.kcal&&!future?`<div class="wd-bar-bg"><div class="wd-bar-fill" style="width:${pct}%;background:${isOver?'var(--fill-over)':'var(--fill)'}"></div></div>`:''}
+      <div class="${hasEntries?'wd-macros':'wd-empty'}">${hasEntries?`P ${Math.round(t.p)}g · C ${Math.round(t.c)}g · F ${Math.round(t.f)}g`:future?'':'Nothing logged'}</div>
+    </div>`;
+  }
+  cont.innerHTML = html;
+}
+
+// ── RENDER HISTORY ──
+function renderHistory() {
+  const cont = document.getElementById('tab-history');
+  // get all unique week-start mondays from db.days keys
+  const allDates = Object.keys(db.days).sort().reverse();
+  if (!allDates.length) { cont.innerHTML='<div class="empty-state"><p>No history yet</p><p>Start logging and it will appear here</p></div>'; return; }
+  const weeks = {};
+  allDates.forEach(d => {
+    const dt = new Date(d+'T12:00:00');
+    const day = dt.getDay();
+    const mon = new Date(dt); mon.setDate(dt.getDate()-((day+6)%7));
+    const wk = dateStr(mon);
+    if (!weeks[wk]) weeks[wk] = [];
+    weeks[wk].push(d);
+  });
+  const sortedWeeks = Object.keys(weeks).sort().reverse();
+  const fmtWeek = wk => {
+    const s = new Date(wk+'T12:00:00');
+    const e = new Date(s); e.setDate(s.getDate()+6);
+    return s.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' – '+e.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  };
+  cont.innerHTML = sortedWeeks.map(wk => {
+    const dates = weeks[wk];
+    const total = dates.reduce((s,d)=>s+dayTotals(d).kcal,0);
+    const daysLogged = dates.filter(d=>(getDay(d).entries||[]).length>0).length;
+    return `<div class="hist-row">
+      <div><div class="hr-week">${fmtWeek(wk)}</div><div class="hr-days">${daysLogged} day${daysLogged!==1?'s':''} logged</div></div>
+      <span class="hr-kcal">${Math.round(total).toLocaleString()} kcal</span>
+    </div>`;
+  }).join('');
+}
+
+// ── TABS ──
+const TAB_IDS = { today:'tab-today', thisweek:'tab-thisweek', lastweek:'tab-lastweek', history:'tab-history', chat:'tab-chat' };
+let activeTab = 'today';
+document.getElementById('tabs').addEventListener('click', e => {
+  const t = e.target.closest('.tab'); if (!t) return;
+  const tab = t.dataset.tab;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));
+  Object.entries(TAB_IDS).forEach(([k,v])=>document.getElementById(v).style.display=k===tab?'block':'none');
+  activeTab = tab;
+  if (tab==='thisweek') renderWeek('tab-thisweek',0);
+  if (tab==='lastweek') renderWeek('tab-lastweek',1);
+  if (tab==='history') renderHistory();
+});
+
+// ── RENDER (main) ──
+function render() {
+  renderHeader();
+  renderToday();
+  if (activeTab==='thisweek') renderWeek('tab-thisweek',0);
+  if (activeTab==='lastweek') renderWeek('tab-lastweek',1);
+  if (activeTab==='history') renderHistory();
+}
+
+// ── CHAT ──
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const btn = document.getElementById('chat-send');
+  const msgs = document.getElementById('chat-msgs');
+  const text = input.value.trim(); if (!text) return;
+  input.value=''; btn.disabled=true;
+
+  msgs.innerHTML += `<div class="msg user">${text}</div>`;
+  const thinking = document.createElement('div'); thinking.className='msg assistant'; thinking.textContent='…';
+  msgs.appendChild(thinking); msgs.scrollTop=msgs.scrollHeight;
+
+  // build context summary
+  const today = todayStr();
+  const thisWeekDates = weekDates(0);
+  const todayT = dayTotals(today);
+  const weekT = thisWeekDates.reduce((a,d)=>{const t=dayTotals(d);a.kcal+=t.kcal;a.p+=t.p;a.c+=t.c;a.f+=t.f;return a},{kcal:0,p:0,c:0,f:0});
+  const g = db.goals;
+  const context = `User's goals: ${g.kcal||'not set'} kcal, protein ${g.protein||'not set'}g, carbs ${g.carbs||'not set'}g, fat ${g.fat||'not set'}g.
+Today (${today}): ${Math.round(todayT.kcal)} kcal consumed, ${Math.round(todayT.p)}g protein, ${Math.round(todayT.c)}g carbs, ${Math.round(todayT.f)}g fat.${g.kcal?` ${Math.max(0,g.kcal-Math.round(todayT.kcal))} kcal remaining today.`:''}
+This week total: ${Math.round(weekT.kcal)} kcal${g.kcal?' / target '+(g.kcal*7)+' kcal, '+(g.kcal*7-Math.round(weekT.kcal))+' remaining':''}.
+Today's log: ${(getDay(today).entries||[]).map(e=>e.name+' ('+Math.round(e.kcal)+' kcal)').join(', ')||'nothing logged yet'}.`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:300,
+        system:'You are a concise, friendly nutrition assistant. Answer the user\'s question about their calories and macros using the data provided. Be brief and direct. Use UK English.',
+        messages:[{role:'user',content:`Context:\n${context}\n\nQuestion: ${text}`}]
+      })
+    });
+    const data = await r.json();
+    const reply = data.content?.find(b=>b.type==='text')?.text||'Sorry, I couldn\'t get an answer.';
+    thinking.textContent = reply;
+  } catch(e) { thinking.textContent='Something went wrong — try again.'; }
+  btn.disabled=false; msgs.scrollTop=msgs.scrollHeight;
+}
+
+// ── INIT ──
+document.getElementById('date-lbl').textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+document.getElementById('food-input').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();logFood();} });
+document.getElementById('chat-input').addEventListener('keydown',e=>{ if(e.key==='Enter')sendChat(); });
+document.getElementById('s-token').addEventListener('keydown',e=>{ if(e.key==='Enter')saveSetup(); });
+document.getElementById('s-user').addEventListener('keydown',e=>{ if(e.key==='Enter')saveSetup(); });
+document.querySelectorAll('.goal-field input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')saveGoals();}));
+
+
+function checkSetup() {
+  const token = localStorage.getItem('wia_gh_token');
+  const user  = localStorage.getItem('wia_gh_user');
+  if (!token || !user) {
+    document.getElementById('setup-modal').classList.add('open');
+  } else {
+    loadFromGist().then(()=>{ if(!db.goals.kcal) setTimeout(openModal,700); });
+  }
+}
+
+async function saveSetup() {
+  const user  = document.getElementById('s-user').value.trim();
+  const token = document.getElementById('s-token').value.trim();
+  const errEl = document.getElementById('setup-err');
+  const btn   = document.getElementById('setup-save-btn');
+  if (!user || !token) { errEl.textContent='Please enter both your username and token.'; errEl.style.display='block'; return; }
+  btn.textContent='Checking…'; btn.disabled=true; errEl.style.display='none';
+  // verify token works by hitting gists API
+  try {
+    const r = await fetch('https://api.github.com/gists', {
+      headers:{ Authorization:'token '+token, Accept:'application/vnd.github.v3+json' }
+    });
+    if (!r.ok) throw new Error('bad token');
+    localStorage.setItem('wia_gh_token', token);
+    localStorage.setItem('wia_gh_user',  user);
+    document.getElementById('setup-modal').classList.remove('open');
+    loadFromGist().then(()=>{ if(!db.goals.kcal) setTimeout(openModal,700); });
+  } catch(e) {
+    errEl.textContent='Could not connect — check your username and token and try again.';
+    errEl.style.display='block';
+    btn.textContent='Connect & continue'; btn.disabled=false;
+  }
+}
+
+checkSetup();
+
+</script>
+</body>
+</html>
