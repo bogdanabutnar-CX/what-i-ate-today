@@ -205,13 +205,17 @@ textarea::placeholder{color:var(--text3);font-weight:300}
         <input type="text" id="s-user" placeholder="e.g. yourname" autocomplete="off" autocorrect="off" autocapitalize="off">
       </div>
       <div class="goal-field full">
-        <label>Personal access token (gist scope only)</label>
+        <label>GitHub personal access token (gist scope only)</label>
         <input type="password" id="s-token" placeholder="ghp_…" autocomplete="off" autocorrect="off" autocapitalize="off">
+      </div>
+      <div class="goal-field full">
+        <label>Anthropic API key</label>
+        <input type="password" id="s-ant" placeholder="sk-ant-…" autocomplete="off" autocorrect="off" autocapitalize="off">
       </div>
     </div>
     <div id="setup-err" style="font-size:.78rem;color:var(--danger);margin-bottom:.8rem;display:none"></div>
     <button class="btn-save" style="width:100%" onclick="saveSetup()" id="setup-save-btn">Connect & continue</button>
-    <p style="margin-top:.75rem;font-size:.75rem;color:var(--text3);line-height:1.5">Need a token? Go to github.com → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token. Tick only <em>gist</em>.</p>
+    <p style="margin-top:.75rem;font-size:.75rem;color:var(--text3);line-height:1.5">GitHub token: github.com → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token, tick only <em>gist</em>.<br>Anthropic key: console.anthropic.com → API Keys → Create Key.</p>
   </div>
 </div>
 
@@ -506,7 +510,7 @@ async function logFood() {
   document.getElementById('btn-lbl').innerHTML = '<span class="spinner"></span>';
   try {
     const parseRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      method:'POST', headers:{'Content-Type':'application/json','x-api-key':localStorage.getItem('wia_ant_key')||'','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514', max_tokens:400,
         system:'UK food intake parser. Respond ONLY with valid JSON, no markdown. Format: {"display_name":"concise name","search_query":"search terms","estimated_grams":100,"use_per_100g":true,"fallback_kcal":200,"fallback_protein_g":10,"fallback_carbs_g":20,"fallback_fat_g":8}. use_per_100g=true for branded/supermarket products, false for composite meals. UK portions, metric weights.',
@@ -749,7 +753,7 @@ async function sendChat() {
 
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      method:'POST', headers:{'Content-Type':'application/json','x-api-key':localStorage.getItem('wia_ant_key')||'','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514', max_tokens:300,
         system:'You are a concise friendly nutrition assistant. Answer questions about calories and macros using the data provided. Be brief and direct. Use UK English.',
@@ -768,6 +772,7 @@ document.getElementById('date-lbl').textContent = new Date().toLocaleDateString(
 document.getElementById('food-input').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();logFood();} });
 document.getElementById('chat-input').addEventListener('keydown',e=>{ if(e.key==='Enter')sendChat(); });
 document.getElementById('s-token').addEventListener('keydown',e=>{ if(e.key==='Enter')saveSetup(); });
+document.getElementById('s-ant').addEventListener('keydown',e=>{ if(e.key==='Enter')saveSetup(); });
 document.getElementById('s-user').addEventListener('keydown',e=>{ if(e.key==='Enter')saveSetup(); });
 document.querySelectorAll('.goal-field input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')saveGoals();}));
 
@@ -775,7 +780,8 @@ document.querySelectorAll('.goal-field input').forEach(i=>i.addEventListener('ke
 function checkSetup() {
   const token = localStorage.getItem('wia_gh_token');
   const user  = localStorage.getItem('wia_gh_user');
-  if (!token || !user) {
+  const ant   = localStorage.getItem('wia_ant_key');
+  if (!token || !user || !ant) {
     document.getElementById('setup-modal').classList.add('open');
   } else {
     loadFromGist().then(()=>{ if(!db.goals.kcal) setTimeout(openModal,700); });
@@ -785,22 +791,24 @@ function checkSetup() {
 async function saveSetup() {
   const user  = document.getElementById('s-user').value.trim();
   const token = document.getElementById('s-token').value.trim();
+  const ant   = document.getElementById('s-ant').value.trim();
   const errEl = document.getElementById('setup-err');
   const btn   = document.getElementById('setup-save-btn');
-  if (!user || !token) { errEl.textContent='Please enter both your username and token.'; errEl.style.display='block'; return; }
+  if (!user || !token || !ant) { errEl.textContent='Please fill in all three fields.'; errEl.style.display='block'; return; }
+  if (!ant.startsWith('sk-ant-')) { errEl.textContent='Anthropic key should start with sk-ant-'; errEl.style.display='block'; return; }
   btn.textContent='Checking…'; btn.disabled=true; errEl.style.display='none';
-  // verify token works by hitting gists API
   try {
     const r = await fetch('https://api.github.com/gists', {
       headers:{ Authorization:'token '+token, Accept:'application/vnd.github.v3+json' }
     });
-    if (!r.ok) throw new Error('bad token');
+    if (!r.ok) throw new Error('bad github token');
     localStorage.setItem('wia_gh_token', token);
     localStorage.setItem('wia_gh_user',  user);
+    localStorage.setItem('wia_ant_key',  ant);
     document.getElementById('setup-modal').classList.remove('open');
     loadFromGist().then(()=>{ if(!db.goals.kcal) setTimeout(openModal,700); });
   } catch(e) {
-    errEl.textContent='Could not connect — check your username and token and try again.';
+    errEl.textContent='Could not connect to GitHub — check your username and token and try again.';
     errEl.style.display='block';
     btn.textContent='Connect & continue'; btn.disabled=false;
   }
