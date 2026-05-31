@@ -509,9 +509,7 @@ async function logFood() {
       method:'POST', headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514', max_tokens:400,
-        system:`UK food intake parser. Respond ONLY with valid JSON, no markdown:
-{"display_name":"<concise log name>","search_query":"<Open Food Facts query>","estimated_grams":<number>,"use_per_100g":<bool>,"fallback_kcal":<number>,"fallback_protein_g":<number>,"fallback_carbs_g":<number>,"fallback_fat_g":<number>}
-use_per_100g=true for branded/supermarket products. UK portions, metric weights.`,
+        system:'UK food intake parser. Respond ONLY with valid JSON, no markdown. Format: {"display_name":"concise name","search_query":"search terms","estimated_grams":100,"use_per_100g":true,"fallback_kcal":200,"fallback_protein_g":10,"fallback_carbs_g":20,"fallback_fat_g":8}. use_per_100g=true for branded/supermarket products, false for composite meals. UK portions, metric weights.',
         messages:[{role:'user',content:text}]
       })
     });
@@ -743,18 +741,19 @@ async function sendChat() {
   const todayT = dayTotals(today);
   const weekT = thisWeekDates.reduce((a,d)=>{const t=dayTotals(d);a.kcal+=t.kcal;a.p+=t.p;a.c+=t.c;a.f+=t.f;return a},{kcal:0,p:0,c:0,f:0});
   const g = db.goals;
-  const context = `User's goals: ${g.kcal||'not set'} kcal, protein ${g.protein||'not set'}g, carbs ${g.carbs||'not set'}g, fat ${g.fat||'not set'}g.
-Today (${today}): ${Math.round(todayT.kcal)} kcal consumed, ${Math.round(todayT.p)}g protein, ${Math.round(todayT.c)}g carbs, ${Math.round(todayT.f)}g fat.${g.kcal?` ${Math.max(0,g.kcal-Math.round(todayT.kcal))} kcal remaining today.`:''}
-This week total: ${Math.round(weekT.kcal)} kcal${g.kcal?' / target '+(g.kcal*7)+' kcal, '+(g.kcal*7-Math.round(weekT.kcal))+' remaining':''}.
-Today's log: ${(getDay(today).entries||[]).map(e=>e.name+' ('+Math.round(e.kcal)+' kcal)').join(', ')||'nothing logged yet'}.`;
+  const context = 'Goals: ' + (g.kcal||'not set') + ' kcal, protein ' + (g.protein||'not set') + 'g, carbs ' + (g.carbs||'not set') + 'g, fat ' + (g.fat||'not set') + 'g. ' +
+    'Today (' + today + '): ' + Math.round(todayT.kcal) + ' kcal consumed, ' + Math.round(todayT.p) + 'g protein, ' + Math.round(todayT.c) + 'g carbs, ' + Math.round(todayT.f) + 'g fat. ' +
+    (g.kcal ? (Math.max(0, g.kcal - Math.round(todayT.kcal)) + ' kcal remaining today. ') : '') +
+    'This week: ' + Math.round(weekT.kcal) + ' kcal' + (g.kcal ? ' / target ' + (g.kcal*7) + ' kcal, ' + (g.kcal*7 - Math.round(weekT.kcal)) + ' remaining' : '') + '. ' +
+    "Today's log: " + ((getDay(today).entries||[]).map(function(e){return e.name+' ('+Math.round(e.kcal)+' kcal)';}).join(', ')||'nothing logged yet') + '.'
 
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST', headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514', max_tokens:300,
-        system:'You are a concise, friendly nutrition assistant. Answer the user\'s question about their calories and macros using the data provided. Be brief and direct. Use UK English.',
-        messages:[{role:'user',content:`Context:\n${context}\n\nQuestion: ${text}`}]
+        system:'You are a concise friendly nutrition assistant. Answer questions about calories and macros using the data provided. Be brief and direct. Use UK English.',
+        messages:[{role:'user',content:'Context:\n'+context+'\n\nQuestion: '+text}]
       })
     });
     const data = await r.json();
