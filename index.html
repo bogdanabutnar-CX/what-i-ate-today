@@ -514,13 +514,17 @@ async function logFood() {
       method:'POST', headers:{'Content-Type':'application/json','x-api-key':localStorage.getItem('wia_ant_key')||'','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body: JSON.stringify({
         model:'claude-sonnet-4-5', max_tokens:400,
-        system:'UK food intake parser. Respond ONLY with valid JSON, no markdown. Format: {"display_name":"concise name","search_query":"search terms","estimated_grams":100,"use_per_100g":true,"fallback_kcal":200,"fallback_protein_g":10,"fallback_carbs_g":20,"fallback_fat_g":8}. use_per_100g=true for branded/supermarket products, false for composite meals. UK portions, metric weights.',
+        system:'UK food intake parser. The user may describe one food or several. Always respond with a SINGLE JSON object for the whole meal combined. No markdown, no code fences, no multiple blocks. Format exactly: {"display_name":"concise name for whole meal","search_query":"main item for Open Food Facts","estimated_grams":300,"use_per_100g":false,"fallback_kcal":400,"fallback_protein_g":20,"fallback_carbs_g":40,"fallback_fat_g":15}. For mixed meals set use_per_100g to false and combine all nutrition totals. UK portions, metric weights.',
         messages:[{role:'user',content:text}]
       })
     });
     const pd = await parseRes.json();
     const raw = pd.content?.find(b=>b.type==='text')?.text||'';
-    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const cleaned = raw.replace(/```json|```/g,'').trim();
+    const firstBrace = cleaned.indexOf('{');
+    const lastBrace = cleaned.lastIndexOf('}');
+    const jsonStr = cleaned.slice(firstBrace, lastBrace+1);
+    const parsed = JSON.parse(jsonStr);
     let entry = null;
     if (parsed.use_per_100g && parsed.search_query) {
       const off = await searchOFF(parsed.search_query);
