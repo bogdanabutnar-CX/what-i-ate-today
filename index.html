@@ -506,7 +506,7 @@ async function logFood() {
   document.getElementById('btn-lbl').innerHTML = '<span class="spinner"></span>';
   try {
     const parseRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514', max_tokens:400,
         system:`UK food intake parser. Respond ONLY with valid JSON, no markdown:
@@ -750,7 +750,7 @@ Today's log: ${(getDay(today).entries||[]).map(e=>e.name+' ('+Math.round(e.kcal)
 
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514', max_tokens:300,
         system:'You are a concise, friendly nutrition assistant. Answer the user\'s question about their calories and macros using the data provided. Be brief and direct. Use UK English.',
